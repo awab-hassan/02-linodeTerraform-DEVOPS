@@ -4,7 +4,7 @@ Project Description: Client asked me to deploy LKE (Linode Kubernetes Engine) cl
 
 Solution: 
 - I researched about terraform linode providers.
-- I configured the terraform code according to my needs.
+- I configured the terraform code according to Client needs.
 - I deployed the LKE cluster using terraform.
 - I deployed apache using terraform.
 - I deployed mongodb and setup credentials using terraform.
