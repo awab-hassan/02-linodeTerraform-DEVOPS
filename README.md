@@ -11,4 +11,4 @@ Solution:
 - I deployed mongodb service using terraform.
 - I deployed horizontal pod autoscalling using terraform.
 
-![13b9ad86b1b84343ba468bdc9d877664](https://github.com/awab-hassan/02-linodeTerraform-DEVOPS/assets/90965012/60778df0-4feb-4921-bd09-3850e1858f97)
+ ![13b9ad86b1b84343ba468bdc9d877664](https://github.com/awab-hassan/02-linodeTerraform-DEVOPS/assets/90965012/ca0e56a6-f617-442e-a3c7-1688811824fa)
