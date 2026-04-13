@@ -220,7 +220,7 @@ resource "kubernetes_horizontal_pod_autoscaler" "apache_autoscaling" {
   }
 }
 
-//Export this cluster's attributes
+//Export this cluster's attributess
 output "kubeconfig" {
    value = linode_lke_cluster.foobar.kubeconfig
    sensitive = true
