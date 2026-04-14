@@ -1,0 +1,15 @@
+# Terraform state — never commit
+*.tfstate
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+
+# Credentials — never commit
+# terraform.tfvars (So everyone can use and modify it according to their requirements.)
+*.pem
+*.key
+kubeconfig.yaml
+kubeconfig.yml
+
+# OS
+.DS_Store

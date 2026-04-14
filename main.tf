@@ -1,53 +1,63 @@
 terraform {
   required_providers {
     linode = {
-      source = "linode/linode"
+      source  = "linode/linode"
       version = "1.29.4"
     }
     kubernetes = {
-      source = "hashicorp/kubernetes"
+      source  = "hashicorp/kubernetes"
       version = "2.16.1"
     }
   }
 }
 
-//Use the Linode Provider
 provider "linode" {
-  token = "SECURITY_TOKEN"
+  token = var.token
 }
 
-// Change the config_path according to where you installed your config.yaml file from linode kubernetes GUI. 
+# NOTE: Two-step deployment required.
+# Step 1: Comment out everything below the linode_lke_cluster resource and run:
+#   terraform apply
+# Then export the kubeconfig:
+#   terraform output -raw kubeconfig | base64 -d > kubeconfig.yaml
+# Step 2: Set kubeconfig_path to that file, uncomment everything, then run:
+#   terraform apply
 provider "kubernetes" {
-  config_paths = [
-    "PATH_OF_KUBECONFIG_FILE",
-  ]
+  config_paths = [var.kubeconfig_path]
 }
 
-// Declaring all the variables that we are gonna use. 
-variable "token" {}
-variable "k8s_version" {}
-variable "label" {}
-variable "region" {}
-variable "tags" {}
-variable "pools" {}
-
-// Cluster data here ( Hardcoding for now to demonstrate )
+# LKE Cluster
 resource "linode_lke_cluster" "foobar" {
-    k8s_version = "1.24"
-    label = "default-lke"
-    region = "us-east"
-    tags = ["dev"]
+  k8s_version = "1.24"
+  label       = "default-lke"
+  region      = "us-east"
+  tags        = ["dev"]
 
-    dynamic "pool" {
-      for_each = var.pools
-      content {
-            type  = pool.value["type"]
-            count = pool.value["count"]
-        }
+  dynamic "pool" {
+    for_each = var.pools
+    content {
+      type  = pool.value["type"]
+      count = pool.value["count"]
     }
+  }
 }
 
-// Integrating LKE with kubernetes and deploy nginx
+# Kubernetes Secret for MongoDB credentials
+resource "kubernetes_secret" "mongodb_credentials" {
+  metadata {
+    name      = "mongodb-secret"
+    namespace = "default"
+  }
+
+  data = {
+    mongo-root-username = var.mongo_root_username
+    mongo-root-password = var.mongo_root_password
+  }
+
+  type = "Opaque"
+}
+
+# Apache Deployment
 resource "kubernetes_deployment" "apache-server" {
   metadata {
     name = "apache-server"
@@ -99,7 +109,25 @@ resource "kubernetes_deployment" "apache-server" {
   }
 }
 
-// This is MongoDB kubernetes deployment. 
+# Apache Service
+resource "kubernetes_service" "apache" {
+  metadata {
+    name      = "apache-server"
+    namespace = "default"
+  }
+  spec {
+    selector = {
+      test = "apache-server"
+    }
+    port {
+      port        = 80
+      target_port = 80
+    }
+    type = "LoadBalancer"
+  }
+}
+
+# MongoDB Deployment — credentials pulled from Secret
 resource "kubernetes_deployment" "mongodb" {
   metadata {
     name = "mongodb"
@@ -128,16 +156,26 @@ resource "kubernetes_deployment" "mongodb" {
           image = "mongo"
           name  = "mongodb"
           port {
-            container_port = "27017"
-            protocol = "TCP"
+            container_port = 27017
+            protocol       = "TCP"
           }
           env {
             name = "MONGO_INITDB_ROOT_USERNAME"
-            value = "admin"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.mongodb_credentials.metadata[0].name
+                key  = "mongo-root-username"
+              }
+            }
           }
           env {
             name = "MONGO_INITDB_ROOT_PASSWORD"
-            value = "password"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.mongodb_credentials.metadata[0].name
+                key  = "mongo-root-password"
+              }
+            }
           }
         }
       }
@@ -145,17 +183,15 @@ resource "kubernetes_deployment" "mongodb" {
   }
 }
 
-// This is the service of mongodb deployments
+# MongoDB Service
 resource "kubernetes_service" "mongodb" {
   metadata {
     name      = "mongodb"
     namespace = "default"
-
     labels = {
       app     = "mongodb"
       release = "mongodb"
     }
-
     annotations = {
       "service.alpha.kubernetes.io/tolerate-unready-endpoints" = "true"
     }
@@ -173,19 +209,17 @@ resource "kubernetes_service" "mongodb" {
   }
 }
 
-// This is the configmap of MONGODB Database you will use this in order to connect your applicaiton.
-// Just refrence this in your applicaiton deployment.
+# ConfigMap for MongoDB connection URL
 resource "kubernetes_config_map_v1" "mongodb" {
   metadata {
     name = "my-config"
   }
-  
   data = {
     database_url = "mongodb"
   }
 }
 
-// Enabling autoscaling
+# HPA for Apache — latency-based External metric
 resource "kubernetes_horizontal_pod_autoscaler" "apache_autoscaling" {
   metadata {
     name = "apache-server-hpa"
@@ -220,24 +254,24 @@ resource "kubernetes_horizontal_pod_autoscaler" "apache_autoscaling" {
   }
 }
 
-//Export this cluster's attributess
+# Outputs
 output "kubeconfig" {
-   value = linode_lke_cluster.foobar.kubeconfig
-   sensitive = true
+  value     = linode_lke_cluster.foobar.kubeconfig
+  sensitive = true
 }
 
 output "api_endpoints" {
-   value = linode_lke_cluster.foobar.api_endpoints
+  value = linode_lke_cluster.foobar.api_endpoints
 }
 
 output "status" {
-   value = linode_lke_cluster.foobar.status
+  value = linode_lke_cluster.foobar.status
 }
 
 output "id" {
-   value = linode_lke_cluster.foobar.id
+  value = linode_lke_cluster.foobar.id
 }
 
 output "pool" {
-   value = linode_lke_cluster.foobar.pool
+  value = linode_lke_cluster.foobar.pool
 }
