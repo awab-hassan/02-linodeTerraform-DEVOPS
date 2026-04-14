@@ -86,9 +86,10 @@ cp terraform.tfvars.example terraform.tfvars
 
 ```
 02-linodeTerraform-DEVOPS/
-├── main.tf          (provider config, LKE cluster)
-├── .gitignore
+├── main.tf          
 ├── variables.tf
+├── terraform.tfvars
+├── .gitignore
 └── README.md
 ```
 
