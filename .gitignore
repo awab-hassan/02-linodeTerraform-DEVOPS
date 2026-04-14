@@ -5,7 +5,7 @@
 .terraform.lock.hcl
 
 # Credentials — never commit
-# terraform.tfvars (So everyone can use and modify it according to their requirements.)
+terraform.tfvars
 *.pem
 *.key
 kubeconfig.yaml
