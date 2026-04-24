@@ -17,11 +17,11 @@ provider "linode" {
 
 # NOTE: Two-step deployment required.
 # Step 1: Comment out everything below the linode_lke_cluster resource and run:
-#   terraform apply
+#    terraform apply
 # Then export the kubeconfig:
-#   terraform output -raw kubeconfig | base64 -d > kubeconfig.yaml
+#    terraform output -raw kubeconfig | base64 -d > kubeconfig.yaml
 # Step 2: Set kubeconfig_path to that file, uncomment everything, then run:
-#   terraform apply
+#    terraform apply
 provider "kubernetes" {
   config_paths = [var.kubeconfig_path]
 }
