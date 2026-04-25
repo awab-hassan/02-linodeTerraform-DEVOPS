@@ -8,7 +8,7 @@
 
 ## Overview
 
-Deployed a full Kubernetes stack on Linode Kubernetes Engine (LKE) entirely through Terraform. The project covers cluster provisioning, application deployment (Apache + MongoDB), credential management, and Horizontal Pod Autoscaling — all defined as infrastructure code using the Linode Terraform provider.
+Deployed a full kubernetes stack on Linode Kubernetes Engine (LKE) entirely through Terraform. The project covers cluster provisioning, application deployment (Apache + MongoDB), credential management, and Horizontal Pod Autoscaling — all defined as infrastructure code using the Linode Terraform provider.
 
 ## Architecture
 
